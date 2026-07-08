@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Research Agent — IBM watsonx.ai</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🔬</text></svg>" />
+  <!-- Bootstrap 5.3 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <!-- App Styles -->
+  <link rel="stylesheet" href="/static/css/styles.css" />
+</head>
+
+<body>
+<!-- ═══════════════════════ SIDEBAR ═══════════════════════ -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="brand">
+      <span class="brand-icon">🔬</span>
+      <div>
+        <div class="brand-name">Research Agent</div>
+        <div class="brand-sub">IBM watsonx.ai · Granite</div>
+      </div>
+    </div>
+    <button class="btn-icon sidebar-close d-lg-none" id="sidebarClose">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+
+  <nav class="sidebar-nav">
+    <button class="nav-item active" data-tab="chat">
+      <i class="bi bi-chat-dots-fill"></i><span>Research Chat</span>
+    </button>
+    <button class="nav-item" data-tab="search">
+      <i class="bi bi-search"></i><span>Paper Search</span>
+    </button>
+    <button class="nav-item" data-tab="review">
+      <i class="bi bi-book-fill"></i><span>Literature Review</span>
+    </button>
+    <button class="nav-item" data-tab="compare">
+      <i class="bi bi-bar-chart-steps"></i><span>Compare Papers</span>
+    </button>
+    <button class="nav-item" data-tab="gaps">
+      <i class="bi bi-lightbulb-fill"></i><span>Research Gaps</span>
+    </button>
+    <button class="nav-item" data-tab="upload">
+      <i class="bi bi-cloud-upload-fill"></i><span>Upload Document</span>
+    </button>
+    <button class="nav-item" data-tab="citations">
+      <i class="bi bi-bookmark-fill"></i><span>Citations</span>
+    </button>
+    <button class="nav-item" data-tab="report">
+      <i class="bi bi-file-earmark-text-fill"></i><span>Generate Report</span>
+    </button>
+    <button class="nav-item" data-tab="history">
+      <i class="bi bi-clock-history"></i><span>History</span>
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="model-badge">
+      <i class="bi bi-cpu-fill"></i>
+      <span id="modelStatus">Connecting…</span>
+    </div>
+    <div class="d-flex gap-2 mt-2">
+      <button class="btn-icon flex-fill" id="themeToggle" title="Toggle dark mode">
+        <i class="bi bi-moon-fill"></i> Dark
+      </button>
+      <button class="btn-icon flex-fill" id="newSession" title="New session">
+        <i class="bi bi-plus-circle"></i> New
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ MAIN ═══════════════════════════ -->
+<div class="main-wrapper">
+  <!-- Top Bar -->
+  <header class="topbar">
+    <button class="btn-icon d-lg-none" id="sidebarToggle">
+      <i class="bi bi-list"></i>
+    </button>
+    <h1 class="topbar-title" id="pageTitle">Research Chat</h1>
+    <div class="topbar-actions">
+      <span class="session-badge" id="sessionBadge">Session: —</span>
+      <button class="btn-icon" id="clearBtn" title="Clear current view">
+        <i class="bi bi-trash3"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ─── TAB: CHAT ─────────────────────────────────────── -->
+  <section class="tab-panel active" id="tab-chat">
+    <div class="chat-container">
+      <div class="chat-messages" id="chatMessages">
+        <div class="welcome-card">
+          <div class="welcome-icon">🔬</div>
+          <h2>AI Research Agent</h2>
+          <p>Powered by IBM watsonx.ai · Granite 3 · 8B Instruct</p>
+          <div class="quick-actions">
+            <button class="quick-btn" onclick="quickPrompt('Summarize recent advances in large language models')">
+              <i class="bi bi-robot"></i> LLM Advances
+            </button>
+            <button class="quick-btn" onclick="quickPrompt('What are the key research gaps in quantum computing?')">
+              <i class="bi bi-cpu"></i> Quantum Gaps
+            </button>
+            <button class="quick-btn" onclick="quickPrompt('Explain the CRISPR-Cas9 methodology and its limitations')">
+              <i class="bi bi-dna"></i> CRISPR Methods
+            </button>
+            <button class="quick-btn" onclick="quickPrompt('Compare transformer vs recurrent neural network architectures')">
+              <i class="bi bi-diagram-3"></i> Compare Architectures
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="chat-input-area">
+        <div class="typing-indicator d-none" id="typingIndicator">
+          <span></span><span></span><span></span> Granite is thinking…
+        </div>
+        <div class="input-row">
+          <textarea class="chat-textarea" id="chatInput" rows="1"
+            placeholder="Ask a research question, request a paper summary, explore a topic…"
+            onkeydown="handleChatKey(event)"></textarea>
+          <button class="send-btn" id="sendBtn" onclick="sendChat()">
+            <i class="bi bi-send-fill"></i>
+          </button>
+        </div>
+        <div class="input-hints">
+          <span><kbd>Enter</kbd> to send</span>
+          <span><kbd>Shift+Enter</kbd> for new line</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── TAB: SEARCH ───────────────────────────────────── -->
+  <section class="tab-panel" id="tab-search">
+    <div class="panel-content">
+      <div class="panel-header">
+        <h2><i class="bi bi-search"></i> Paper Search</h2>
+        <p>Search academic papers from arXiv and get AI-powered insights</p>
+      </div>
+      <div class="search-bar-row">
+        <input type="text" class="form-control form-control-lg" id="searchQuery"
+               placeholder="e.g. 'attention mechanisms in transformers'" />
+        <select class="form-select w-auto" id="searchLimit">
+          <option value="5">5 papers</option>
+          <option value="10" selected>10 papers</option>
+          <option value="15">15 papers</option>
+          <option value="20">20 papers</option>
+        </select>
+        <button class="btn-primary-action" onclick="searchPapers()">
+          <i class="bi bi-search"></i> Search
+        </button>
+      </div>
+      <div id="searchResults" class="results-area d-none">
+        <div class="insight-box" id="searchInsight"></div>
+        <div id="paperCards" class="paper-grid"></div>
+      </div>
+      <div class="loading-overlay d-none" id="searchLoading">
+        <div class="spinner"></div><p>Searching arXiv &amp; generating insights…</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── TAB: LITERATURE REVIEW ────────────────────────── -->
+  <section class="tab-panel" id="tab-review">
+    <div class="panel-content">
+      <div class="panel-header">
+        <h2><i class="bi bi-book-fill"></i> Literature Review</h2>
+        <p>Auto-generate structured literature reviews with citations</p>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Research Topic</label>
+        <input type="text" class="form-control" id="reviewTopic"
+               placeholder="e.g. 'Deep learning for medical image segmentation'" />
+      </div>
+      <button class="btn-primary-action" onclick="generateReview()">
+        <i class="bi bi-book-fill"></i> Generate Literature Review
+      </button>
+      <div class="loading-overlay d-none" id="reviewLoading">
+        <div class="spinner"></div><p>Searching literature &amp; writing review…</p>
+      </div>
+      <div class="result-box d-none" id="reviewResult">
+        <div class="result-toolbar">
+          <span class="result-label"><i class="bi bi-book-fill"></i> Literature Review</span>
+          <div class="d-flex gap-2">
+            <button class="btn-sm-action" onclick="exportResult('reviewContent', 'Literature Review')">
+              <i class="bi bi-download"></i> Export
+            </button>
+            <button class="btn-sm-action" onclick="copyResult('reviewContent')">
+              <i class="bi bi-clipboard"></i> Copy
+            </button>
+          </div>
+        </div>
+        <div class="result-content" id="reviewContent"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── TAB: COMPARE ──────────────────────────────────── -->
+  <section class="tab-panel" id="tab-compare">
+    <div class="panel-content">
+      <div class="panel-header">
+        <h2><i class="bi bi-bar-chart-steps"></i> Compare Papers</h2>
+        <p>Side-by-side comparison of multiple research papers</p>
+      </div>
+      <div id="compareInputs">
+        <div class="paper-input-card" id="paperInput0">
+          <label class="form-label fw-semibold">Paper 1</label>
+          <input type="text" class="form-control mb-2" placeholder="Title" data-field="title" />
+          <input type="text" class="form-control mb-2" placeholder="Authors (comma-separated)" data-field="authors" />
+          <input type="text" class="form-control mb-2" placeholder="Year" data-field="year" />
+          <textarea class="form-control" rows="3" placeholder="Abstract or key content" data-field="abstract"></textarea>
+        </div>
+        <div class="paper-input-card" id="paperInput1">
+          <label class="form-label fw-semibold">Paper 2</label>
+          <input type="text" class="form-control mb-2" placeholder="Title" data-field="title" />
+          <input type="text" class="form-control mb-2" placeholder="Authors (comma-separated)" data-field="authors" />
+          <input type="text" class="form-control mb-2" placeholder="Year" data-field="year" />
+          <textarea class="form-control" rows="3" placeholder="Abstract or key content" data-field="abstract"></textarea>
+        </div>
+      </div>
+      <div class="d-flex gap-2 my-3">
+        <button class="btn-secondary-action" onclick="addPaperInput()">
+          <i class="bi bi-plus"></i> Add Paper
+        </button>
+        <button class="btn-primary-action" onclick="comparePapers()">
+          <i class="bi bi-bar-chart-steps"></i> Compare
+        </button>
+      </div>
+      <div class="loading-overlay d-none" id="compareLoading">
+        <div class="spinner"></div><p>Comparing papers…</p>
+      </div>
+      <div class="result-box d-none" id="compareResult">
+        <div class="result-toolbar">
+          <span class="result-label"><i class="bi bi-bar-chart-steps"></i> Comparison</span>
+          <button class="btn-sm-action" onclick="copyResult('compareContent')">
+            <i class="bi bi-clipboard"></i> Copy
+          </button>
+        </div>
+        <div class="result-content" id="compareContent"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── TAB: GAPS ─────────────────────────────────────── -->
+  <section class="tab-panel" id="tab-gaps">
+    <div class="panel-content">
+      <div class="panel-header">
+        <h2><i class="bi bi-lightbulb-fill"></i> Research Gap Analysis</h2>
+        <p>Identify unexplored areas and suggest future research directions</p>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Research Topic</label>
+        <input type="text" class="form-control" id="gapTopic"
+               placeholder="e.g. 'Federated learning privacy guarantees'" />
+      </div>
+      <button class="btn-primary-action" onclick="analyzeGaps()">
+        <i class="bi bi-lightbulb-fill"></i> Analyze Research Gaps
+      </button>
+      <div class="loading-overlay d-none" id="gapsLoading">
+        <div class="spinner"></div><p>Analyzing literature for gaps…</p>
+      </div>
+      <div class="result-box d-none" id="gapsResult">
+        <div class="result-toolbar">
+          <span class="result-label"><i class="bi bi-lightbulb-fill"></i> Gap Analysis</span>
+          <button class="btn-sm-action" onclick="copyResult('gapsContent')">
+            <i class="bi bi-clipboard"></i> Copy
+          </button>
+        </div>
+        <div class="result-content" id="gapsContent"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── TAB: UPLOAD ───────────────────────────────────── -->
+  <section class="tab-panel" id="tab-upload">
+    <div class="panel-content">
+      <div class="panel-header">
+        <h2><i class="bi bi-cloud-upload-fill"></i> Upload Document</h2>
+        <p>Analyze PDF, DOCX, or TXT research documents with AI</p>
+      </div>
+      <div class="upload-zone" id="uploadZone"
+           ondragover="event.preventDefault()" ondrop="handleDrop(event)">
+        <i class="bi bi-cloud-upload upload-icon"></i>
+        <p class="upload-text">Drag &amp; drop a PDF, DOCX, or TXT file here</p>
+        <p class="upload-sub">or click to browse</p>
+        <input type="file" id="fileInput" accept=".pdf,.docx,.txt" class="d-none"
+               onchange="handleFileSelect(event)" />
+        <button class="btn-primary-action mt-3" onclick="document.getElementById('fileInput').click()">
+          <i class="bi bi-folder2-open"></i> Browse Files
+        </button>
+      </div>
+      <div class="upload-options mt-3">
+        <label class="form-label fw-semibold">Analysis Type</label>
+        <div class="d-flex gap-2 flex-wrap">
+          <label class="radio-card">
+            <input type="radio" name="uploadAction" value="summarize" checked />
+            <span><i class="bi bi-card-text"></i> Summarize</span>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="uploadAction" value="extract" />
+            <span><i class="bi bi-list-columns"></i> Extract Info</span>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="uploadAction" value="review" />
+            <span><i class="bi bi-star-half"></i> Critical Review</span>
+          </label>
+        </div>
+      </div>
+      <div class="loading-overlay d-none" id="uploadLoading">
+        <div class="spinner"></div><p>Extracting text &amp; analyzing…</p>
+      </div>
+      <div class="result-box d-none" id="uploadResult">
+        <div class="result-toolbar">
+          <span class="result-label" id="uploadResultLabel">
+            <i class="bi bi-file-earmark-text"></i> Analysis
+          </span>
+          <div class="d-flex gap-2">
+            <button class="btn-sm-action" onclick="exportResult('uploadContent', 'Document Analysis')">
+              <i class="bi bi-download"></i> Export
+            </button>
+            <button class="btn-sm-action" onclick="copyResult('uploadContent')">
+              <i class="bi bi-clipboard"></i> Copy
+            </button>
+          </div>
+        </div>
+        <div class="result-content" id="uploadContent"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── TAB: CITATIONS ────────────────────────────────── -->
+  <section class="tab-panel" id="tab-citations">
+    <div class="panel-content">
+      <div class="panel-header">
+        <h2><i class="bi bi-bookmark-fill"></i> Citation Manager</h2>
+        <p>Manage, format, and export your reference library</p>
+      </div>
+      <div class="citation-toolbar">
+        <button class="btn-primary-action" data-bs-toggle="modal" data-bs-target="#addCitationModal">
+          <i class="bi bi-plus-circle"></i> Add Citation
+        </button>
+        <select class="form-select w-auto" id="citationFormat">
+          <option value="APA">APA</option>
+          <option value="IEEE">IEEE</option>
+          <option value="MLA">MLA</option>
+          <option value="Chicago">Chicago</option>
+          <option value="Harvard">Harvard</option>
+        </select>
+        <button class="btn-secondary-action" onclick="formatAllCitations()">
+          <i class="bi bi-magic"></i> Format All
+        </button>
+        <button class="btn-secondary-action" onclick="exportCitations()">
+          <i class="bi bi-download"></i> Export List
+        </button>
+      </div>
+      <div id="citationsList" class="citations-list">
+        <div class="empty-state">
+          <i class="bi bi-bookmark"></i>
+          <p>No citations yet. Search for papers or add manually.</p>
+        </div>
+      </div>
+      <div class="loading-overlay d-none" id="citationsLoading">
+        <div class="spinner"></div><p>Formatting citations…</p>
+      </div>
+      <div class="result-box d-none" id="citationsFormatted">
+        <div class="result-toolbar">
+          <span class="result-label"><i class="bi bi-card-list"></i> Formatted References</span>
+          <button class="btn-sm-action" onclick="copyResult('citationsFormattedContent')">
+            <i class="bi bi-clipboard"></i> Copy
+          </button>
+        </div>
+        <div class="result-content" id="citationsFormattedContent"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── TAB: REPORT ───────────────────────────────────── -->
+  <section class="tab-panel" id="tab-report">
+    <div class="panel-content">
+      <div class="panel-header">
+        <h2><i class="bi bi-file-earmark-text-fill"></i> Generate Report</h2>
+        <p>Create structured academic reports with AI-generated content and citations</p>
+      </div>
+      <div class="row g-3 mb-3">
+        <div class="col-md-8">
+          <label class="form-label fw-semibold">Research Topic</label>
+          <input type="text" class="form-control" id="reportTopic"
+                 placeholder="e.g. 'Transformer models in NLP: A comprehensive review'" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Report Type</label>
+          <select class="form-select" id="reportType">
+            <option value="full">Full Research Report</option>
+            <option value="executive">Executive Summary</option>
+            <option value="abstract">Structured Abstract</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn-primary-action" onclick="generateReport()">
+        <i class="bi bi-file-earmark-text-fill"></i> Generate Report
+      </button>
+      <div class="loading-overlay d-none" id="reportLoading">
+        <div class="spinner"></div><p>Writing your report…</p>
+      </div>
+      <div class="result-box d-none" id="reportResult">
+        <div class="result-toolbar">
+          <span class="result-label"><i class="bi bi-file-earmark-text"></i> Research Report</span>
+          <div class="d-flex gap-2">
+            <button class="btn-sm-action" onclick="exportReport('pdf')">
+              <i class="bi bi-file-pdf"></i> PDF
+            </button>
+            <button class="btn-sm-action" onclick="exportReport('docx')">
+              <i class="bi bi-file-word"></i> DOCX
+            </button>
+            <button class="btn-sm-action" onclick="copyResult('reportContent')">
+              <i class="bi bi-clipboard"></i> Copy
+            </button>
+          </div>
+        </div>
+        <div class="result-content" id="reportContent"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── TAB: HISTORY ──────────────────────────────────── -->
+  <section class="tab-panel" id="tab-history">
+    <div class="panel-content">
+      <div class="panel-header">
+        <h2><i class="bi bi-clock-history"></i> Research History</h2>
+        <p>All past sessions and conversations</p>
+      </div>
+      <button class="btn-primary-action mb-3" onclick="loadSessions()">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
+      <div id="sessionsList" class="sessions-list">
+        <div class="empty-state">
+          <i class="bi bi-clock"></i>
+          <p>No sessions yet. Start a research conversation.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div><!-- /main-wrapper -->
+
+<!-- ═══ ADD CITATION MODAL ═══════════════════════════════════════════ -->
+<div class="modal fade" id="addCitationModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-bookmark-plus"></i> Add Citation</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Title *</label>
+          <input type="text" class="form-control" id="citTitle" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Authors (comma-separated)</label>
+          <input type="text" class="form-control" id="citAuthors" />
+        </div>
+        <div class="row g-2">
+          <div class="col-md-4">
+            <label class="form-label">Year</label>
+            <input type="text" class="form-control" id="citYear" />
+          </div>
+          <div class="col-md-8">
+            <label class="form-label">Journal / Conference</label>
+            <input type="text" class="form-control" id="citJournal" />
+          </div>
+        </div>
+        <div class="mb-3 mt-2">
+          <label class="form-label">URL / DOI</label>
+          <input type="text" class="form-control" id="citUrl" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" onclick="addCitation()">
+          <i class="bi bi-bookmark-plus"></i> Add
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ EXPORT MODAL ══════════════════════════════════════════════════ -->
+<div class="modal fade" id="exportModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-download"></i> Export</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-3">Choose export format:</p>
+        <div class="d-grid gap-2">
+          <button class="btn btn-outline-danger" onclick="doExport('pdf')">
+            <i class="bi bi-file-pdf-fill"></i> Export as PDF
+          </button>
+          <button class="btn btn-outline-primary" onclick="doExport('docx')">
+            <i class="bi bi-file-word-fill"></i> Export as DOCX
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer"></div>
+
+<!-- ── Scripts ─────────────────────────────────────────────────────── -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>
